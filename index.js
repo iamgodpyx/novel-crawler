@@ -4,7 +4,7 @@ const puppeteer = require("puppeteer");
 const prompt = require("prompt-sync")();
 const Hjson = require("hjson");
 
-const version = "1.0.0";
+const VERSION = "1.0.0";
 
 const config = (function (filePath) {
   let configFile = null;
@@ -43,7 +43,7 @@ main();
 // getBook("https://www.xbiquge.tw/book/54510/38637143.html", '风起龙城')
 
 async function main() {
-  console.log("\nNovel-Crawler 爬虫 v" + version);
+  console.log("\nNovel-Crawler 爬虫 v" + VERSION);
   let url = prompt("请输入开始章节网址: ");
   if (url == "") {
     console.log("url为空，退出程序...");
@@ -159,7 +159,7 @@ async function getBook(
   let bookname = bookInfo.bookname;
 
   bookInfo.bookSourceVersion = bookSource.version; // 往书籍信息中添加书源版本号
-  bookInfo.crawlerVersion = `pyx/novel-crawler:v${version}`; // 往书籍信息中添加本软件版本号
+  bookInfo.crawlerVersion = `pyx/novel-crawler:v${VERSION}`; // 往书籍信息中添加本软件版本号
 
   console.log("书籍信息:\n" + JSON.stringify(bookInfo, null, 4));
 
