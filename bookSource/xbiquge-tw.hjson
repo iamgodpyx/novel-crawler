@@ -5,7 +5,7 @@
     bookSourceName: "笔趣阁", // 书源名称
     bookSourceUrl: "https://www.xbiquge.tw", // 书源网站地址
 
-    note: "", // 书源备注信息, 会在启动书源时显示, 可以留空
+    note: "", // 书源备注信息
 
     // 尚不支持搜索
     //searchUrl: "https://www.xbiquge.tw/search.php?keyword={key}",
@@ -17,10 +17,10 @@
     // 从章节url 中提取 bookid 的正则表达式
     getBookID:
     {
-        arguments:"url", // 传入的参数, 第一章或某一章的url, 请不要动这玩意儿
+        arguments:"url", // 传入的参数, 第一章或某一章的url
         body:
         '''
-            // 此处是函数体, 本函数应该透过解析传入的参数: url, 即章节内的url, 
+            // 此处是函数体, 本函数应该透过解析传入的参数: url, 即章节内的url,
             // 来提取 book id 并回传
             return url.match(/\/(\d+)\//)[1];
         '''
@@ -64,10 +64,10 @@
     // 获取书籍信息
     getBookInfo:
     {
-        arguments:"document", // 传入的参数, 是从evaluate那边获取的页面的document 对象, 请不要动这玩意儿
+        arguments:"document", // 传入的参数, 页面的document 对象
         body:
         '''
-            // 此处是函数体, 这里存放爬虫代码, 需要使用 document (就是浏览器中的document对象) 以及css 选择器来获取数据
+            // 此处是函数体, 这里存放爬虫代码, 需要使用 document 以及 css 选择器来获取数据
             // 获取并透过 return 返回以下数据: {bookname, img, author, intro}
 
             let bookname = document.querySelector('#info h1').innerHTML; // 获取小说名字
@@ -83,7 +83,7 @@
     // 获取章节内容
     getContent:
     {
-        arguments:"document", // 传入的参数, 是从evaluate那边获取的页面的document 对象, 请不要动这玩意儿
+        arguments:"document", // 传入的参数
         body:
         '''
             let content = document.querySelector('#content').textContent; // 获取小说内容 
@@ -94,7 +94,7 @@
             // 这两种情况都是可以接受的, 不过如果下一页的url 为空, 记得直接读取.href 是会报错的, 要加个判断
             let nextPageUrl = document.getElementById('link-next').href; // 获取下一页的链接 
             return {content, title, nextPageUrl} 
-        ''', // 函数体, 这里存放 爬虫代码, 需要使用 document (就是浏览器中的document对象) 以及css 选择器来获取数据
+        ''', // 函数体, 这里存放 爬虫代码, 使用 document 以及css 选择器来获取数据
             // 获取并透过 return 返回以下数据: (content, title, nextPageUrl)
     }
 

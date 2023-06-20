@@ -20,8 +20,8 @@
     "axios": "^1.4.0",
     "crypto-js": "^4.1.1",
     "hjson": "^3.2.2",
-    "prompt-sync": "^4.2.0",
     "puppeteer": "^20.6.0",
+    "readline-sync": "^1.4.10",
     "tencentcloud-sdk-nodejs-ocr": "^4.0.622"
   }
 }

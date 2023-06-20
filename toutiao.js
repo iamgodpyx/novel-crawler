@@ -25,10 +25,14 @@ const headers = {
   "Upgrade-Insecure-Requests": "1",
 };
 const cookies = {
+  tt_webid: "7072661175557015053",
+};
+
+const puppeteerCookies = {
   value: "7072661175557015053",
   name: "tt_webid",
   domain: "m.toutiao.com",
-}; // 此处cookies可从浏览器中查找，为了避免被头条禁止爬虫
+};
 
 let max_behot_time = "0"; // 链接参数
 const title = []; // 存储新闻标题
@@ -98,6 +102,7 @@ const sleep = (time) => {
   });
 };
 
+// 接口请求爬取
 const main = async (
   max_behot_time,
   title,
@@ -159,6 +164,7 @@ const main = async (
         s_url.push(source_url[i]);
       }
       console.log("头条号：", source[i]);
+      console.log("评论数：", comment_count[i]);
       console.log(title.length);
     }
   }
@@ -174,6 +180,7 @@ const main = async (
 //   comment_count
 // );
 
+// 无头浏览器爬取
 const puppeteerAction = async () => {
   const browser = await puppeteer.launch({
     headless: "new",
@@ -190,8 +197,7 @@ const puppeteerAction = async () => {
     hasTouch: true,
   });
 
-  await page.setCookie(cookies);
-  // await page.goto("https://m.toutiao.com");
+  await page.setCookie(puppeteerCookies);
 
   for (let i = 0; i < 10; i++) {
     const ascp = getAsCp();
@@ -246,6 +252,7 @@ const puppeteerAction = async () => {
         s_url.push(source_url[i]);
       }
       console.log("头条号：", source[i]);
+      console.log("评论数：", comment_count[i]);
       console.log(title.length);
     }
   }

@@ -5,7 +5,7 @@
     bookSourceName: "qd小说", // 书源名称
     bookSourceUrl: "https://www.qidian.com", // 书源网站地址
 
-    note: "", // 书源备注信息, 会在启动书源时显示, 可以留空
+    note: "", // 书源备注信息
 
     // homeUrl: "https://www.www.qidian.com/read/{bookid}", // 书源网站的目录页地址, 用于跳转至目录页
 
@@ -23,7 +23,7 @@
     // 如果这个函数出错, 会导致无法正确的获得book id, 导致无法跳转至目录页, 并在获取小说信息时报错
     getBookID:
     {
-        arguments:"url", // 传入的参数, 第一章或某一章的url, 请不要动这玩意儿
+        arguments:"url", // 传入的参数, 第一章或某一章的url
         body:
         //! 修改下面的代码, 以适配你的网站
         // 此处错误的话, 可能会导致无法正确的获得book id, 导致无法跳转至目录页, 并在获取小说信息时报错
@@ -62,7 +62,7 @@
 
             // 删除首尾空白
             content = content.trim();
-            // 將 &nbsp; 轉換為空格
+            // 將 &nbsp; 转换为空格
             content = content.replace(/&nbsp;/g, "");
 
             return content;
@@ -74,12 +74,11 @@
     // 从小说目录页获取书籍信息
     getBookInfo:
     {
-        arguments:"document", // 传入的参数, 是从evaluate那边获取的页面的document 对象, 请不要动这玩意儿
+        arguments:"document", // 传入的参数, 是从evaluate那边获取的页面的document 对象
         body:
         //! 修改下面的代码, 以适配你的网站
-        // 小提示: 不要在这里使用 console.log, 这会让程序变得很不稳定, 还有, 你看不见他的输出
         '''
-            // 此处是函数体, 这里存放爬虫代码, 需要使用 document (就是浏览器中的document对象) 以及css 选择器来获取数据
+            // 此处是函数体, 这里存放爬虫代码, 使用 document 以及css 选择器来获取数据
             // 获取并透过 return 返回以下数据: {bookname, img, author, intro} 
             let bookname = document.querySelector('.book-info h1 em').textContent; // 获取小说名字
             let img = document.querySelector('.book-img img').src; // 获取小说封面
@@ -94,10 +93,9 @@
     // 从小说正文页获取章节内容
     getContent:
     {
-        arguments:"document", // 传入的参数, 是从evaluate那边获取的页面的document 对象, 请不要动这玩意儿
+        arguments:"document", // 传入的参数, 是从evaluate那边获取的页面的document 对象
         body: 
         //! 修改下面的代码, 以适配你的网站
-        // 小提示: 不要在这里使用 console.log, 这会让程序变得很不稳定, 还有, 你看不见他的输出
         '''
         let content = null;
         let title = null;
@@ -122,7 +120,7 @@
         catch(e){nextPageUrl = null}
 
             return {content, title, nextPageUrl} 
-        ''', // 函数体, 这里存放 爬虫代码, 需要使用 document (就是浏览器中的document对象) 以及css 选择器来获取数据
+        ''', // 函数体, 这里存放 爬虫代码, 需要使用 document 以及css 选择器来获取数据
             // 获取并透过 return 返回以下数据: (content, title, nextPageUrl)
     }
 
