@@ -2,12 +2,12 @@
     version: "1.0.3", // 书源版本
 
 
-    bookSourceName: "纵横小说", // 书源名称
-    bookSourceUrl: "https://book.zongheng.com", // 书源网站地址
+    bookSourceName: "晋江小说", // 书源名称
+    bookSourceUrl: "https://www.jjwxc.net/", // 书源网站地址
 
     note: "", // 书源备注信息
 
-    // homeUrl: "https:/.www.qidian.com/read/{bookid}", // 书源网站的目录页地址, 用于跳转至目录页
+    // homeUrl: "https:/www.qidian.com/read/{bookid}", // 书源网站的目录页地址, 用于跳转至目录页
 
 
     // 尚不支持搜索
@@ -27,7 +27,7 @@
         '''
             // 此处是函数体, 本函数应该从传入的参数: url, 即章节url, 
             // 提取 book id 并回传
-            return url.match(/\/chapter\/(\d+)\//)[1]
+            return url.match(/novelid=(\d+)/)[1]
         '''
 
     },
@@ -41,7 +41,7 @@
         // 此处错误的话, 会无法正确的根据book id获取并跳转至目录页, 并在获取小说信息时报错
         '''
             // 把homeUrl 改成你的网站的目录页地址,
-            let homeUrl = "https://book.zongheng.com/book/" + bookid + ".html";
+            let homeUrl = "https://www.jjwxc.net/onebook.php?novelid=" + bookid;
             return homeUrl;
         '''
     },
@@ -77,10 +77,10 @@
         '''
             // 此处是函数体, 这里存放爬虫代码, 使用 document 以及css 选择器来获取数据
             // 获取并透过 return 返回以下数据: {bookname, img, author, intro} 
-            let bookname = document.querySelector('.book-info .book-name').innerText; // 获取小说名字
-            let img = document.querySelector('.book-img img').src; // 获取小说封面
-            let author = document.querySelector('.book-author .au-name a').textContent // 获取小说作者
-            let intro = document.querySelector('.book-dec').innerText.replaceAll('\n', '').replace('展开', ''); // 获取小说简介
+            let bookname = document.querySelector('.bigtext h1 span').innerText; // 获取小说名字
+            let img = document.querySelector('.smallreadbody img').src; // 获取小说封面
+            let author = document.querySelector('.bigtext').parentNode.children[2].children[0].innerText // 获取小说作者
+            let intro = document.querySelector('#novelintro').innerText.replaceAll('\n', ''); // 获取小说简介
             return {bookname, img, author, intro}
         '''
 
@@ -99,19 +99,19 @@
 
          
         try{
-            content = Array.from(document.querySelectorAll('.content p')).map(element => element.innerText.trim()).join('\n'); // 获取小说内容 
+            content = document.querySelector('.novelbody').innerText.replaceAll('\n', '').replace(/\[收藏此章节\] \[免费得晋江币\] \[投诉\]/, ''); // 获取小说内容 
         }
         catch(e){content = null}
 
         try{
-            title = document.querySelector('.title .title_txtbox').innerText.replace(/\n.*/, ''); // 获取小说标题 
+            title = document.querySelector('.novelbody').children[0].children[1].children[0].innerText; // 获取小说标题 
         }
         catch(e){title = null}
 
             // 如果本页是最后一页, 有些网站的下一页是null, 有些网站的下一页是回到目录页的链接
             // 这两种情况都是可以接受的, 不过如果下一页的url 为空, 记得直接读取.href 是会报错的, 要加个判断
         try{
-            nextPageUrl = document.querySelector('.chap_btnbox .nextchapter').href; // 获取下一页的链接 
+            nextPageUrl = [...document.querySelectorAll('.noveltitle')][1].children[0].children[1].href; // 获取下一页的链接 
         }
         catch(e){nextPageUrl = null}
 

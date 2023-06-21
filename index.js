@@ -392,6 +392,7 @@ const deduceBookSourceFromUrl = async (url, bookSourceDir) => {
 const getBookInfo = async (browser, bookSource, chapterUrl) => {
   console.log(" --- 正在获取小说信息 --- ");
   let homeUrl = bookSource.getHomeUrl(bookSource.getBookID(chapterUrl));
+  console.log('书籍首页：', homeUrl);
 
   const page = await browser.newPage();
   await page.goto(homeUrl);
