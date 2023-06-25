@@ -137,7 +137,7 @@ const ocrText = async () => {
 
   for (let pageNum = startIndex; pageNum <= endIndex; pageNum++) {
     await page.screenshot({ path: "example.jpg" });
-    await sleep(500);
+    // await sleep(200);
 
     const result = await ocrText();
 
