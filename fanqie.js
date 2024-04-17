@@ -1,8 +1,12 @@
 const puppeteer = require("puppeteer");
 const fs = require("fs");
 const tencentcloud = require("tencentcloud-sdk-nodejs-ocr");
-
+const readlineSync = require("readline-sync");
+const { cookies, sleep, writeFile } = require("./utils");
 const OcrClient = tencentcloud.ocr.v20181119.Client;
+
+const defaultSaveDir = "./output/";
+const defaultBookName = "番茄小说";
 
 // 实例化一个认证对象，入参需要传入腾讯云账户 SecretId 和 SecretKey，此处还需注意密钥对的保密
 // 代码泄露可能会导致 SecretId 和 SecretKey 泄露，并威胁账号下所有资源的安全性。以下代码示例仅供参考，建议采用更安全的方式来使用密钥，请参见：https://cloud.tencent.com/document/product/1278/85305
@@ -25,7 +29,7 @@ const client = new OcrClient(clientConfig);
 
 const ocrText = async () => {
   const image = fs.readFileSync("./example.jpg").toString("base64");
-  const params = { ImageBase64: image};
+  const params = { ImageBase64: image };
   let res;
   await client.GeneralBasicOCR(params).then(
     (data) => {
@@ -38,30 +42,78 @@ const ocrText = async () => {
   return res;
 };
 
-// // 设置APPID/AK/SK
-// const APP_ID = "34877787";
-// const API_KEY = "sA2vCFE2cgGtgKfZm49rqDaX";
-// const SECRET_KEY = "8092G3SMILn0TRui3w9MfYjvm6z0TXf8";
-
-// // 新建一个对象，建议只保存一个对象调用服务接口
-// const client = new AipOcrClient(APP_ID, API_KEY, SECRET_KEY);
-
-// const ocrTextTest = async () => {
-//   const options = { detect_direction: true };
-//   images("example.jpg").size(500, 3000).save("ocr.jpg", { quality: 100 });
-
-//   // 识别本地图片
-//   const image = fs.readFileSync("./ocr.jpg").toString("base64");
-//   let result = client.generalBasic(image, options);
-//   return result;
-
-//   // 识别在线图片
-//   // const result = await client.generalBasicUrl(
-//   //   "https://lzw.me/wp-content/uploads/2017/02/donate_wx.png"
-//   // );
-// };
-
 (async () => {
+  let url = readlineSync.question("请输入开始章节网址: ");
+  if (url == "") {
+    console.log("url为空，退出程序...");
+    return;
+  }
+
+  let startIndex = readlineSync.question("请输入起始章节（1）: ");
+  let endIndex = readlineSync.question("请输入结束章节（2000）: ");
+  if (startIndex == "") startIndex = 1;
+  if (endIndex == "") endIndex = 2000;
+
+  let dir = readlineSync.question(
+    `请输入小说存放资料夹(预设: ${defaultSaveDir})/${defaultBookName}: `
+  );
+
+  let bookname = readlineSync.question(
+    `请输入小说名称(预设: ${defaultSaveDir})/${defaultBookName}: `
+  );
+  if (dir === "") {
+    dir = defaultSaveDir;
+  }
+  if (bookname === "") {
+    bookname = defaultBookName;
+  }
+  console.log("书名：:", bookname);
+
+  let mergeable;
+  if (readlineSync.keyInYN("请选择是否合并所有章节至单独文件?y/N(N)")) {
+    mergeable = true;
+  } else {
+    mergeable = false;
+  }
+  console.log("是否合并章节", mergeable);
+
+  if (dir[dir.length - 1] != "/") {
+    dir += "/";
+  }
+  if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
+    console.log(`\n >> 资料夹不存在，将会自动创建此目录: (${dir})`);
+  }
+
+  dir += bookname + "/";
+  console.log(`\n >> 小说将存储到: (${dir})`);
+
+  startIndex = parseInt(startIndex);
+  endIndex = parseInt(endIndex);
+
+  {
+    n = readlineSync.question("按任意键继续... 输入 n 退出");
+    if (n == "n") {
+      console.log("退出程序...");
+      browser.close();
+      return;
+    }
+  }
+
+  try {
+    fs.mkdirSync(`${dir}`, { recursive: true });
+    console.log(`创建目录"${dir}"成功。`);
+  } catch (error) {
+    if (error.code == "EEXIST") console.log("目录已存在，无需创建。");
+    else {
+      console.log("创建目录失败，未知错误... 打印错误信息:");
+      console.log(error);
+    }
+  }
+
+  if (cookies) await setCookie(page, cookies, (verbose = debug));
+
+  console.log("标签页已启动, 开始爬取小说内容...");
+
   const browser = await puppeteer.launch({
     headless: "new",
     executablePath:
@@ -73,29 +125,45 @@ const ocrText = async () => {
     width: 1000,
     // isMobile: true,
   });
-  await page.goto(
-    "https://fanqienovel.com/reader/7081837085425926656?enter_from=page"
-  );
 
-  for (let i = 0; i < 10; i++) {
+  await page.goto(url).catch((err) => {
+    console.error(
+      ` #####! <-- ${dir} 第 1 章 访问失败 !!!!!  退出程序...######`
+    );
+    console.log(` url为: ${url} \n`);
+    console.log(err);
+    return;
+  });
+
+  for (let pageNum = startIndex; pageNum <= endIndex; pageNum++) {
     await page.screenshot({ path: "example.jpg" });
-    await sleep(1000);
+    // await sleep(200);
 
     const result = await ocrText();
 
-    const data = result.TextDetections.map(item => item.DetectedText).join('\n');
-
-    console.log(123123, data);
-
-    // 寫入檔案
-    //          (目录位置/, 檔案名稱, 檔案內容, 成功訊息, 失敗訊息)
-    writeFile(
-      "download/",
-      `第${i + 1}章.txt`,
-      data,
-      ` --> 第${i + 1}章 已储存\n`,
-      ` #####! <--  写入错误或data为空 !!!!!  退出程序...######`
+    const data = result.TextDetections.map((item) => item.DetectedText).join(
+      "\n"
     );
+
+    if (!mergeable) {
+      writeFile(
+        `${dir}`,
+        `${pageNum.toString().padStart(2, "0")}.txt`,
+        data,
+        ` --> ${dir} 第${pageNum}章 已储存\n`,
+        ` #####! <-- ${dir}/ 第${pageNum}章: 写入错误或data为空 !!!!!  退出程序...######`
+      );
+    } else {
+      writeFile(
+        `${dir}`,
+        `${bookname}.txt`,
+        `${data.replaceAll("    ", "\n")}\n\n`,
+        ` --> ${dir} 第${pageNum}章 已儲存\n`,
+        ` #####! <-- ${dir}/ 第${pageNum}章: 写入错误或data为空 !!!!!  退出程序...######`,
+        1,
+        "a+"
+      );
+    }
 
     // let contentPageData = null;
 
@@ -123,70 +191,14 @@ const ocrText = async () => {
   await browser.close();
 })();
 
-const getNovel = async () => {
-  let contentPageData = null;
-
-  contentPageData = await page.evaluate(() => {
-    let content = [...document.querySelectorAll("#html_0 div p")]
-      .map((item) => item.innerText.trim())
-      .join("\n");
-    let title = document.querySelector("#html_0 body-title").innerText;
-    return { title, content };
-  });
-
-  // 寫入檔案
-  //          (目录位置/, 檔案名稱, 檔案內容, 成功訊息, 失敗訊息)
-  writeFile(
-    `download`,
-    `${contentPageData.title}.txt`,
-    contentPageData.content,
-    ` --> ${dir} 第${pageNum}章: ${contentPageData.title} 已储存\n`,
-    ` #####! <-- ${dir}/ 第${pageNum}章: 写入错误或data为空 !!!!!  退出程序...######`
-  );
-
-  await page.touchscreen.touchmove(0, 400);
-};
-
-// 封装fs.writeFile, 如果写入错误, 递归重试10次
-// dir: 檔案目录, fileName: 檔案名稱, data: 檔案內容,
-// successMessage: 成功訊息, errMessage: 失敗訊息,
-// attempts: 重試次數, 调用时不用传参, flag: 文件写入方式,默认w覆盖模式,合并TXT时使用追加模式
-function writeFile(
-  dir,
-  fileName,
-  data,
-  successMessage,
-  errMessage,
-  attempts = 1,
-  flag = "w"
-) {
-  // 如果失败, 重試10次
-  fs.writeFile(`${dir}${fileName}`, data, { flag }, function (err) {
-    if (err) {
-      console.log(errMessage);
-      console.log(err);
-      if (attempts >= 10) {
-        console.log(` #####! --- 写入錯誤, 第10重试失敗, 退出程序... ######`);
-        return false;
-      } else {
-        console.log(
-          ` #####! --- 写入錯誤, 正在重试: ${attempts + 1}/10 ######`
-        );
-        return writeFile(
-          dir,
-          fileName,
-          data,
-          successMessage,
-          errMessage,
-          attempts + 1
-        );
-      }
+const setCookie = async (page, cookies, verbose = false) => {
+  if (verbose) console.log("\n>> 正在设置cookie...");
+  for (let cookie of cookies) {
+    if (!cookie.value) {
+      if (verbose)
+        console.log(`>> 跳过cookie: ${JSON.stringify(cookie)} 因为value为空.`);
+      continue;
     }
-    console.log(successMessage);
-    return true;
-  });
-}
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+    await page.setCookie(sanitizeCookie(cookie, verbose));
+  }
+};
